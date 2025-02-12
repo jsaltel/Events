@@ -1,0 +1,469 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  Dimensions,
+  Animated,
+  FlatList,
+} from 'react-native';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+
+const eventsData = [
+  {
+    id: '1',
+    title: 'React Native Workshop',
+    date: 'Feb 15',
+    time: '2:00 PM',
+    location: 'Tech Hub, San Francisco',
+    description: 'Join us for an intensive workshop on building beautiful React Native apps. We\'ll cover advanced styling, animations, and best practices for mobile development.',
+    image: 'https://api.a0.dev/assets/image?text=modern%20tech%20workshop%20with%20developers%20collaborating&aspect=16:9',
+    attendees: [
+      { id: '1', avatar: 'https://api.a0.dev/assets/image?text=professional%20headshot%20person%201&seed=123' },
+      { id: '2', avatar: 'https://api.a0.dev/assets/image?text=professional%20headshot%20person%202&seed=456' },
+      { id: '3', avatar: 'https://api.a0.dev/assets/image?text=professional%20headshot%20person%203&seed=789' },
+    ],
+    totalAttendees: 12,
+  },
+  {
+    id: '2',
+    title: 'AI & ML Meetup',
+    date: 'Feb 18',
+    time: '6:00 PM',
+    location: 'Innovation Center, NY',
+    description: 'Explore the latest developments in AI and Machine Learning. Network with industry experts and participate in hands-on demonstrations.',
+    image: 'https://api.a0.dev/assets/image?text=artificial%20intelligence%20conference%20with%20modern%20displays&aspect=16:9',
+    attendees: [
+      { id: '5', avatar: 'https://api.a0.dev/assets/image?text=professional%20headshot%20person%205&seed=202' },
+      { id: '6', avatar: 'https://api.a0.dev/assets/image?text=professional%20headshot%20person%206&seed=303' },
+    ],
+    totalAttendees: 45,
+  },
+  {
+    id: '3',
+    title: 'Design Systems',
+    date: 'Feb 20',
+    time: '10:00 AM',
+    location: 'Creative Studio, Austin',
+    description: 'Learn how to build and maintain scalable design systems. Perfect for designers and developers working on large-scale applications.',
+    image: 'https://api.a0.dev/assets/image?text=modern%20design%20workshop%20with%20creative%20professionals&aspect=16:9',
+    attendees: [
+      { id: '7', avatar: 'https://api.a0.dev/assets/image?text=professional%20headshot%20person%207&seed=404' },
+      { id: '8', avatar: 'https://api.a0.dev/assets/image?text=professional%20headshot%20person%208&seed=505' },
+    ],
+    totalAttendees: 28,
+  },
+  {
+    id: '4',
+    title: 'Product Design 2025',
+    date: 'Feb 22',
+    time: '3:00 PM',
+    location: 'Design Lab, Miami',
+    description: 'Discover the future of product design in this interactive workshop led by industry veterans.',
+    image: 'https://api.a0.dev/assets/image?text=futuristic%20product%20design%20workshop&aspect=16:9',
+    attendees: [
+      { id: '9', avatar: 'https://api.a0.dev/assets/image?text=professional%20headshot%20person%209&seed=606' },
+      { id: '10', avatar: 'https://api.a0.dev/assets/image?text=professional%20headshot%20person%2010&seed=707' },
+    ],
+    totalAttendees: 35,
+  },
+];
+
+export default function EventsList() {
+  const [activeTab, setActiveTab] = useState('discover');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const slideAnim = useState(new Animated.Value(0))[0];
+
+  const showModal = (event) => {
+    setSelectedEvent(event);
+    setModalVisible(true);
+    Animated.spring(slideAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 11,
+    }).start();
+  };
+
+  const hideModal = () => {
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setModalVisible(false);
+      setSelectedEvent(null);
+    });
+  };
+
+  const renderAttendees = (attendees, totalAttendees) => {
+    return (
+      <View style={styles.attendeesContainer}>
+        {attendees.map((attendee, index) => (
+          <Image
+            key={attendee.id}
+            source={{ uri: attendee.avatar }}
+            style={[
+              styles.attendeeAvatar,
+              { right: index * 15 }
+            ]}
+          />
+        ))}
+        {totalAttendees > attendees.length && (
+          <View style={[styles.attendeeCount, { right: attendees.length * 15 }]}>
+            <Text style={styles.attendeeCountText}>+{totalAttendees - attendees.length}</Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderEventCard = ({ item }) => (
+    <TouchableOpacity 
+      activeOpacity={0.95} 
+      onPress={() => showModal(item)}
+      style={styles.cardContainer}
+    >
+      <View style={styles.card}>
+        <Image
+          source={{ uri: item.image }}
+          style={styles.cardImage}
+        />
+        <LinearGradient
+          colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.8)']}
+          style={styles.gradient}
+        />
+        <View style={styles.cardContent}>
+          <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+          <View style={styles.infoRow}>
+            <View style={styles.infoContainer}>
+              <MaterialIcons name="event" size={14} color="#fff" />
+              <Text style={styles.infoText}>{item.date}</Text>
+            </View>
+            <View style={styles.infoContainer}>
+              <MaterialIcons name="access-time" size={14} color="#fff" />
+              <Text style={styles.infoText}>{item.time}</Text>
+            </View>
+          </View>
+          {renderAttendees(item.attendees, item.totalAttendees)}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.tabContainer}>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'discover' && styles.activeTab]} 
+            onPress={() => setActiveTab('discover')}
+          >
+            <Text style={[styles.tabText, activeTab === 'discover' && styles.activeTabText]}>
+              Discover
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'myEvents' && styles.activeTab]} 
+            onPress={() => setActiveTab('myEvents')}
+          >
+            <Text style={[styles.tabText, activeTab === 'myEvents' && styles.activeTabText]}>
+              My Events
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <FlatList
+        data={eventsData}
+        renderItem={renderEventCard}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+      />
+
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={hideModal}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={hideModal}
+        >
+          {selectedEvent && (
+            <Animated.View
+              style={[
+                styles.modalContent,
+                {
+                  transform: [
+                    {
+                      translateY: slideAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [600, 0],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <View style={styles.modalHeader}>
+                <View style={styles.modalIndicator} />
+              </View>
+              <ScrollView style={styles.modalScroll}>
+                <Image
+                  source={{ uri: selectedEvent.image }}
+                  style={styles.modalImage}
+                />
+                <View style={styles.modalBody}>
+                  <Text style={styles.modalTitle}>{selectedEvent.title}</Text>
+                  
+                  <View style={styles.modalInfoRow}>
+                    <MaterialIcons name="event" size={20} color="#666" />
+                    <Text style={styles.modalInfoText}>{selectedEvent.date}</Text>
+                  </View>
+                  
+                  <View style={styles.modalInfoRow}>
+                    <MaterialIcons name="access-time" size={20} color="#666" />
+                    <Text style={styles.modalInfoText}>{selectedEvent.time}</Text>
+                  </View>
+                  
+                  <View style={styles.modalInfoRow}>
+                    <Ionicons name="location-outline" size={20} color="#666" />
+                    <Text style={styles.modalInfoText}>{selectedEvent.location}</Text>
+                  </View>
+
+                  <Text style={styles.modalSectionTitle}>About</Text>
+                  <Text style={styles.modalDescription}>{selectedEvent.description}</Text>
+
+                  <Text style={styles.modalSectionTitle}>Attendees</Text>
+                  {renderAttendees(selectedEvent.attendees, selectedEvent.totalAttendees)}
+                </View>
+              </ScrollView>
+              
+              <TouchableOpacity 
+                style={styles.joinButton}
+                onPress={hideModal}
+              >
+                <Text style={styles.joinButtonText}>Join Event</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+        </TouchableOpacity>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  header: {
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#007AFF',
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  activeTabText: {
+    color: '#007AFF',
+  },
+  listContainer: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  cardContainer: {
+    marginBottom: 16,
+    height: 200,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  card: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+  },
+  gradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '70%',
+  },
+  cardContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  infoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  infoText: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  attendeesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 32,
+  },
+  attendeeAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  attendeeCount: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#007AFF',
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  attendeeCountText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '90%',
+  },
+  modalHeader: {
+    alignItems: 'center',
+    padding: 12,
+  },
+  modalIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#DDD',
+    borderRadius: 2,
+  },
+  modalScroll: {
+    maxHeight: '100%',
+  },
+  modalImage: {
+    width: '100%',
+    height: 200,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#000',
+  },
+  modalInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalInfoText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#666',
+  },
+  modalSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 12,
+    color: '#000',
+  },
+  modalDescription: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#666',
+    marginBottom: 16,
+  },
+  joinButton: {
+    backgroundColor: '#007AFF',
+    margin: 20,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  joinButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});
